@@ -6,7 +6,11 @@ class DetailPageCell: UITableViewCell {
     private var timer: Timer?
     private var elapsedTime: TimeInterval = 0
     private var isTimerRunning: Bool = false
+    private var time: Double?
+    private var initialTime: Double?
+    var timerCompletionHandler: (() -> Void)?
     
+
     private lazy var mainView: UIView = {
         let view = UIView()
         view.backgroundColor = .greenColor
@@ -83,6 +87,9 @@ class DetailPageCell: UITableViewCell {
         view.image = UIImage(named: "next")
         view.contentMode = .scaleAspectFill
         view.layer.masksToBounds = true
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(nextViewTapped))
+        view.addGestureRecognizer(tapGesture)
+        view.isUserInteractionEnabled = true
         return view
     }()
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
@@ -96,38 +103,56 @@ class DetailPageCell: UITableViewCell {
         setupViews()
         setupConstraints()
     }
-    private func startTimer() {
+    //MARK: - Timer
+
+    func startTimer() {
         timer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(updateTimer), userInfo: nil, repeats: true)
     }
-    
+    private func pauseTimer() {
+        timer?.invalidate()
+        isTimerRunning = false
+    }
     private func resetTimer() {
         timer?.invalidate()
         elapsedTime = 0
         isTimerRunning = false
         startTimer()
     }
-    
     @objc private func updateTimer() {
         guard elapsedTime > 0 else {
             timer?.invalidate()
-            // Добавьте сюда код, который нужно выполнить, когда таймер достигнет нуля
+            isTimerRunning = false
+            setupConstraints()
+            timerCompletionHandler?()
             return
         }
         
         elapsedTime -= 1
         timerLabel.text = formattedTime(elapsedTime)
         
-        let increment: Double = 0.3333
         var sliderValue = circularSlider.currentValue
         print(sliderValue)
         if sliderValue < 360 {
-            sliderValue += increment
+            sliderValue += self.time ?? 0.1
             circularSlider.currentValue = sliderValue
         }
     }
+    @objc func pauseViewTapped() {
+        if isTimerRunning {
+            timer?.invalidate()
+        } else {
+            startTimer()
+        }
+        isTimerRunning.toggle()
+    }
+    @objc func nextViewTapped() {
+        timer?.invalidate()
+        isTimerRunning = false
+        setupConstraints()
+        timerCompletionHandler?()
+    }
+    //MARK: - FormattedTime
 
-
-        
     private func formattedTime(_ timeInterval: TimeInterval) -> String {
         let formatter = DateComponentsFormatter()
         formatter.unitsStyle = .positional
@@ -136,6 +161,12 @@ class DetailPageCell: UITableViewCell {
         
         return formatter.string(from: timeInterval) ?? "25:00"
     }
+    private func formattedTimeString(from seconds: TimeInterval) -> String {
+        let minutes = Int(seconds) / 60
+        return "\(minutes) min"
+    }
+    //MARK: - setupViews
+
     private func setupViews() {
         contentView.isUserInteractionEnabled = true
         selectionStyle = .none
@@ -149,23 +180,8 @@ class DetailPageCell: UITableViewCell {
                              whiteBack,
                              pauseView,
                              nextView)
-        let initialTime: TimeInterval = 5 * 60
-        elapsedTime = initialTime
-        timerLabel.text = formattedTime(initialTime)
-    }
-    @objc private func pauseViewTapped() {
-        if isTimerRunning {
-            timer?.invalidate()
-        } else {
-            startTimer()
-        }
-        isTimerRunning.toggle()
-    }
-    
-    // Метод для остановки таймера
-    private func pauseTimer() {
-        timer?.invalidate()
-        isTimerRunning = false
+        elapsedTime = initialTime ?? 300
+        timerLabel.text = formattedTime(initialTime ?? 300)
     }
     private func setupConstraints() {
         
@@ -245,5 +261,20 @@ class DetailPageCell: UITableViewCell {
             setupConstraints()
         }
     }
-    
+    //MARK: - Configure
+
+    func configure(model: CycleType, initialTime: Double, time: Double) {
+        typeLabel.text = model.timeType
+        cycleLabel.text = model.cycleStep
+        self.initialTime = initialTime
+        self.time = time
+
+        
+        timerLabel.text = formattedTime(initialTime)
+        elapsedTime = initialTime
+        
+        let formattedTime = formattedTimeString(from: initialTime)
+        timeLabel.text = formattedTime
+        
+    }
 }

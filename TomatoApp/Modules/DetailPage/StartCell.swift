@@ -21,6 +21,8 @@ class StartCell: UITableViewCell {
         contentView.isUserInteractionEnabled = true
         layer.masksToBounds = true
         backgroundColor = .clear
+        selectionStyle = .none
+
         addSubviews(mainImage)
         
         mainImage.snp.makeConstraints { make in

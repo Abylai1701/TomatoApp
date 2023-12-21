@@ -62,11 +62,8 @@ class MainCell: UICollectionViewCell {
         }
         
     }
-    
-//    func configure(model: GoalModel) {
-//        titleLabel.text = model.name
-//        let progress = Int((model.currentSeries * 100)/model.iterationCount)
-//        progressView.progress = Float(progress) * 0.01
-//        countLabel.text = "\(model.iterationCount)/\(model.currentSeries)"
-//    }
+    func configure(model: MethodType) {
+        titleLabel.text = model.title
+        backgroundColor =  model.background
+    }
 }

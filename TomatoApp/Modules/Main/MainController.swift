@@ -1,8 +1,33 @@
 import UIKit
 
+enum MethodType {
+    case fifteen
+    case twentyFive
+    case fourtyFive
+    
+    var title:String {
+        switch self{
+        case .fifteen: return "15 min focus, 3-min break"
+        case .twentyFive: return "25 min focus, 5-min break"
+        case .fourtyFive: return "45 min focus, 10-min break"
+        }
+    }
+    var background: UIColor {
+        switch self{
+        case .fifteen: return .orangeColor
+        case .twentyFive: return .blueColor
+        case .fourtyFive: return .greenColor2
+        }
+    }
+}
+
 class MainController: BaseController {
     
     //MARK: - Properties
+    var sections: [MethodType] = [.fifteen,
+                                  .twentyFive,
+                                  .fourtyFive]
+    
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.font = .montserratSemiBold(ofSize: 36)
@@ -61,7 +86,7 @@ extension MainController: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         let paddingSpace: CGFloat = 12 * 3
         let availableWidth = collectionView.frame.width - paddingSpace
-        let widthPerItem = availableWidth / 2 
+        let widthPerItem = availableWidth / 2
         return CGSize(width: widthPerItem, height: 236)
     }
     
@@ -80,15 +105,30 @@ extension MainController: UICollectionViewDelegateFlowLayout {
 extension MainController: UICollectionViewDataSource {
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return 4
+        return 3
     }
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let vc = DetailPageController()
-        Router.shared.push(vc)
+        if indexPath.row == 1 {
+            let vc = DetailPageController(initialFocusTime: 25 * 60, initialBreakTime: 5 * 60, breakTime: 0.3333, focusTime: 0.0667)
+            Router.shared.push(vc)
+        }else if indexPath.row == 2 {
+            let vc = DetailPageController(initialFocusTime: 45 * 60, initialBreakTime: 10 * 60, breakTime: 0.1667, focusTime: 0.0370)
+            Router.shared.push(vc)
+        }else {
+            let vc = DetailPageController(initialFocusTime: 15 * 60, initialBreakTime: 3 * 60, breakTime: 0.5556, focusTime: 0.1111)
+            Router.shared.push(vc)
+        }
     }
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: MainCell.cellId, for: indexPath) as! MainCell
-        return cell
+        let model = sections[indexPath.row]
+
+        switch model{
+        default:
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: MainCell.cellId, for: indexPath) as! MainCell
+            cell.configure(model: model)
+            return cell
+        }
+        
     }
 }
 
